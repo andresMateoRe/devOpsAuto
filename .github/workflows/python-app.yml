@@ -87,12 +87,12 @@ jobs:
       with:
         server_address: smtp.gmail.com
         server_port: 587
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_PASSWORD }}
+        username: ${{ secrets.EMAIL }}
+        password: ${{ secrets.PASSWORD}}
         subject: "Pipeline Success: Build Passed"
         body: "The pipeline has completed successfully. All tests passed, and coverage thresholds were met."
         to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL_USERNAME }}
+        from: ${{ secrets.EMAIL }}
 
     - name: Notify failure via email
       if: failure()
@@ -100,12 +100,12 @@ jobs:
       with:
         server_address: smtp.gmail.com
         server_port: 587
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_PASSWORD }}
+        username: ${{ secrets.EMAIL }}
+        password: ${{ secrets.PASSWORD}}
         subject: "Pipeline Failure: Build Failed"
         body: "The pipeline has failed. Please check the logs for more details."
         to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL_USERNAME }}
+        from: ${{ secrets.EMAIL}}
 
   nightly:
 
@@ -156,12 +156,12 @@ jobs:
       with:
         server_address: smtp.example.com
         server_port: 587
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_PASSWORD }}
+        username: ${{ secrets.EMAIL}}
+        password: ${{ secrets.PASSWORD }}
         subject: "Nightly Pipeline Success"
         body: "The nightly pipeline has completed successfully. All tests passed and dependencies are up-to-date."
         to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL_USERNAME }}
+        from: ${{ secrets.EMAIL }}
 
     - name: Notify failure via email
       if: failure()
@@ -169,9 +169,9 @@ jobs:
       with:
         server_address: smtp.example.com
         server_port: 587
-        username: ${{ secrets.EMAIL_USERNAME }}
-        password: ${{ secrets.EMAIL_PASSWORD }}
+        username: ${{ secrets.EMAIL }}
+        password: ${{ secrets.PASSWORD }}
         subject: "Nightly Pipeline Failure"
         body: "The nightly pipeline has failed. Please check the logs for more details."
         to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL_USERNAME }}
+        from: ${{ secrets.EMAIL }}
