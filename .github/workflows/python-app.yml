@@ -2,16 +2,18 @@ name: Python application
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main" ,"prueba"]
+   
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main","prueba" ]
+
+    
 
 permissions:
   contents: read
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -34,7 +36,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-cov coverage bandit safety
+        pip install coverage flake8 bandit safety
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Lint with flake8
@@ -54,14 +56,16 @@ jobs:
     - name: Run unit tests with coverage
       run: |
         # Run unit tests and generate a coverage report
-        pytest tests/unit --cov=./ --cov-report=xml --cov-report=html
-      continue-on-error: false  # Detener el pipeline si los tests fallan
+        coverage run -m unittest discover -s tests/unit -p "*.py"
+        coverage report
+        coverage html
 
     - name: Run integration tests with coverage
       run: |
         # Run integration tests and generate a separate coverage report
-        pytest tests/integration --cov=./ --cov-report=xml --cov-report=html
-      continue-on-error: false  # Detener el pipeline si los tests fallan
+        coverage run -m unittest discover -s tests/integration -p "*.py"
+        coverage report
+        coverage html
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v3
@@ -75,13 +79,12 @@ jobs:
         coverage report --fail-under=80
 
     - name: Deploy to staging
-      if: success()  # Solo se despliega si todo ha pasado
+      if: success()  # Only deploy if all tests passed
       run: |
         echo "Deploying to staging environment..."
         # Add your deployment script or commands here
 
   nightly:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -104,14 +107,15 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pytest pytest-cov coverage bandit safety
+        pip install coverage flake8 bandit safety
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Run full test suite
       run: |
         # Run all tests and generate a coverage report
-        pytest --cov=./ --cov-report=xml --cov-report=html
-      continue-on-error: false  # Detener el pipeline si los tests fallan
+        coverage run -m unittest discover -s tests -p "*.py"
+        coverage report
+        coverage html
 
     - name: Check dependency updates
       run: |
