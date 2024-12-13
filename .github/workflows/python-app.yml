@@ -1,0 +1,177 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest pytest-cov coverage bandit safety
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Treat all other issues as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Run security checks
+      run: |
+        # Run Bandit for security issues
+        bandit -r .
+        # Check dependencies for known vulnerabilities
+        safety check
+
+    - name: Run unit tests with coverage
+      run: |
+        # Run unit tests and generate a coverage report
+        pytest tests/unit --cov=./ --cov-report=xml --cov-report=html
+
+    - name: Run integration tests with coverage
+      run: |
+        # Run integration tests and generate a separate coverage report
+        pytest tests/integration --cov=./ --cov-report=xml --cov-report=html
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: htmlcov/
+
+    - name: Analyze coverage results
+      run: |
+        # Fail the pipeline if coverage is below threshold
+        coverage report --fail-under=80
+
+    - name: Deploy to staging
+      if: success()
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your deployment script or commands here
+
+    - name: Notify success via email
+      if: success()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "Pipeline Success: Build Passed"
+        body: "The pipeline has completed successfully. All tests passed, and coverage thresholds were met."
+        to: andresreyes2296@gmail.com
+        from: ${{ secrets.EMAIL_USERNAME }}
+
+    - name: Notify failure via email
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "Pipeline Failure: Build Failed"
+        body: "The pipeline has failed. Please check the logs for more details."
+        to: andresreyes2296@gmail.com
+        from: ${{ secrets.EMAIL_USERNAME }}
+
+  nightly:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest pytest-cov coverage bandit safety
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run full test suite
+      run: |
+        # Run all tests and generate a coverage report
+        pytest --cov=./ --cov-report=xml --cov-report=html
+
+    - name: Check dependency updates
+      run: |
+        # Check for outdated dependencies
+        pip list --outdated
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: nightly-coverage-report
+        path: htmlcov/
+
+    - name: Notify success via email
+      if: success()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.example.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "Nightly Pipeline Success"
+        body: "The nightly pipeline has completed successfully. All tests passed and dependencies are up-to-date."
+        to: andresreyes2296@gmail.com
+        from: ${{ secrets.EMAIL_USERNAME }}
+
+    - name: Notify failure via email
+      if: failure()
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.example.com
+        server_port: 587
+        username: ${{ secrets.EMAIL_USERNAME }}
+        password: ${{ secrets.EMAIL_PASSWORD }}
+        subject: "Nightly Pipeline Failure"
+        body: "The nightly pipeline has failed. Please check the logs for more details."
+        to: andresreyes2296@gmail.com
+        from: ${{ secrets.EMAIL_USERNAME }}
