@@ -34,7 +34,7 @@ def main():
             if choice == '1':
                 print(f"The result is: {add(num1, num2)}")
             elif choice == '2':
-                print(f"The result is: {subtract(num1, num2)}")adsas
+                print(f"The result is: {subtract(num1, num2)}")
             elif choice == '3':
                 print(f"The result is: {multiply(num1, num2)}")
             elif choice == '4':
