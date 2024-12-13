@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Python application
 
 on:
@@ -58,11 +55,13 @@ jobs:
       run: |
         # Run unit tests and generate a coverage report
         pytest tests/unit --cov=./ --cov-report=xml --cov-report=html
+      continue-on-error: false  # Detener el pipeline si los tests fallan
 
     - name: Run integration tests with coverage
       run: |
         # Run integration tests and generate a separate coverage report
         pytest tests/integration --cov=./ --cov-report=xml --cov-report=html
+      continue-on-error: false  # Detener el pipeline si los tests fallan
 
     - name: Upload coverage report
       uses: actions/upload-artifact@v3
@@ -76,36 +75,10 @@ jobs:
         coverage report --fail-under=80
 
     - name: Deploy to staging
-      if: success()
+      if: success()  # Solo se despliega si todo ha pasado
       run: |
         echo "Deploying to staging environment..."
         # Add your deployment script or commands here
-
-    - name: Notify success via email
-      if: success()
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.gmail.com
-        server_port: 587
-        username: ${{ secrets.EMAIL }}
-        password: ${{ secrets.PASSWORD}}
-        subject: "Pipeline Success: Build Passed"
-        body: "The pipeline has completed successfully. All tests passed, and coverage thresholds were met."
-        to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL }}
-
-    - name: Notify failure via email
-      if: failure()
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.gmail.com
-        server_port: 587
-        username: ${{ secrets.EMAIL }}
-        password: ${{ secrets.PASSWORD}}
-        subject: "Pipeline Failure: Build Failed"
-        body: "The pipeline has failed. Please check the logs for more details."
-        to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL}}
 
   nightly:
 
@@ -138,6 +111,7 @@ jobs:
       run: |
         # Run all tests and generate a coverage report
         pytest --cov=./ --cov-report=xml --cov-report=html
+      continue-on-error: false  # Detener el pipeline si los tests fallan
 
     - name: Check dependency updates
       run: |
@@ -149,29 +123,3 @@ jobs:
       with:
         name: nightly-coverage-report
         path: htmlcov/
-
-    - name: Notify success via email
-      if: success()
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.example.com
-        server_port: 587
-        username: ${{ secrets.EMAIL}}
-        password: ${{ secrets.PASSWORD }}
-        subject: "Nightly Pipeline Success"
-        body: "The nightly pipeline has completed successfully. All tests passed and dependencies are up-to-date."
-        to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL }}
-
-    - name: Notify failure via email
-      if: failure()
-      uses: dawidd6/action-send-mail@v3
-      with:
-        server_address: smtp.example.com
-        server_port: 587
-        username: ${{ secrets.EMAIL }}
-        password: ${{ secrets.PASSWORD }}
-        subject: "Nightly Pipeline Failure"
-        body: "The nightly pipeline has failed. Please check the logs for more details."
-        to: andresreyes2296@gmail.com
-        from: ${{ secrets.EMAIL }}
